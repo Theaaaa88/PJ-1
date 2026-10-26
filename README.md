@@ -49,7 +49,8 @@ Data, jumlah epoch, batch, dan seed sama di semua eksperimen. Hanya satu hal yan
 ## 5. Hasil
 
 ### 5.1 Perbandingan di data val
-<img width="924" height="220" alt="image" src="https://github.com/user-attachments/assets/c9dba211-0439-4315-bad7-3d9274c10ad7" />
+<img width="371" height="91" alt="image" src="https://github.com/user-attachments/assets/ba709a75-1552-4c03-ab9b-35903a55f80a" />
+
 Model terpilih (mAP50-95 val tertinggi): **E1_pretrained**
 
 

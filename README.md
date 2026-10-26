@@ -49,48 +49,47 @@ Data, jumlah epoch, batch, dan seed sama di semua eksperimen. Hanya satu hal yan
 ## 5. Hasil
 
 ### 5.1 Perbandingan di data val
-**[ISI: salin tabel dari hasil_praktik_<NIM>.txt]**
+<img width="924" height="220" alt="image" src="https://github.com/user-attachments/assets/c9dba211-0439-4315-bad7-3d9274c10ad7" />
+Model terpilih (mAP50-95 val tertinggi): **E1_pretrained**
 
-| Eksperimen | Perubahan | mAP50 | mAP50-95 | Precision | Recall | ms/gambar |
-|---|---|---|---|---|---|---|
-| E1_pretrained | - (baseline) | ... | ... | ... | ... | ... |
-| E2_scratch | bobot acak | ... | ... | ... | ... | ... |
-| E3_tuning | imgsz=640 | ... | ... | ... | ... | ... |
 
-Model terpilih (mAP50-95 val tertinggi): **[ISI: nama eksperimen]**
+
 
 ### 5.2 Hasil di data test (dipakai satu kali)
-**[ISI: dari sel "Uji di data TEST"]**
+*<img width="398" height="104" alt="image" src="https://github.com/user-attachments/assets/f3e1a712-5683-4943-af9e-5c89c01d7335" />
 
-| mAP50 | mAP50-95 | Precision | Recall |
-|---|---|---|---|
-| ... | ... | ... | ... |
 
 ### 5.3 Grafik
-**[ISI: tarik file gambar ke editor GitHub, lalu salin link yang muncul]**
+E1_pretrained
+<img width="539" height="260" alt="image" src="https://github.com/user-attachments/assets/59687546-218b-49b2-a359-712bc7b6259b" />
 
-- Kurva pelatihan E1: `![results E1](...)`
-- Kurva pelatihan E3: `![results E3](...)`
-- Confusion matrix model terpilih: `![confusion matrix](...)`
-- Contoh prediksi di data test: `![prediksi](...)`
+E3_tuning
+<img width="548" height="269" alt="image" src="https://github.com/user-attachments/assets/e7b07960-bf88-4eef-9b55-7867bf885b41" />
+
+
 
 ## 6. Analisis
-**[ISI: pilih kalimat yang sesuai dengan hasilmu, lalu lengkapi angkanya]**
 
 **E1 vs E2 (manfaat transfer learning).**
-E1 mendapat mAP50-95 sebesar [..] sedangkan E2 sebesar [..]. [E1 lebih tinggi / E2 lebih tinggi / hampir sama] karena E1 memakai bobot hasil belajar dari COCO sehingga sudah mengenali tepi, tekstur, dan bentuk, sedangkan E2 harus belajar semuanya dari awal dengan hanya 70 gambar latih.
+E1 (pretrained COCO) mencapai mAP50-95 sebesar 0.725 di data val, sedangkan E2 (bobot acak) hanya 0.002. E1 sudah punya pengetahuan dasar dari COCO (tepi, tekstur, bentuk benda), sehingga cukup menyesuaikan diri ke dua kelas baru. E2 harus belajar dari nol dengan hanya 70 gambar latih dan 30 epoch, sehingga belum sempat belajar mendeteksi. Hasil ini menunjukkan manfaat transfer learning pada dataset kecil, tetapi bukan bukti bahwa model dari nol "tidak bisa": dengan data dan epoch jauh lebih banyak, hasilnya bisa berbeda.
 
 **E1 vs E3 (hasil tuning).**
-E3 mengubah imgsz dari 416 menjadi 640. mAP50-95 berubah dari [..] menjadi [..], dan waktu inferensi dari [..] ms menjadi [..] ms. Perubahan ini [dipertahankan / dibatalkan] karena [alasan: akurasi naik cukup berarti / naik tipis tapi lebih lambat / turun].
+E3 mengubah satu hal saja, yaitu imgsz dari 416 menjadi 640. mAP50-95 turun dari 0.725 menjadi 0.680, recall dari 0.994 menjadi 0.900, dan precision dari 0.954 menjadi 0.932. Jadi memperbesar ukuran gambar tidak membantu pada dataset ini. Benda pada foto sudah cukup besar, sehingga resolusi tambahan kemungkinan tidak memberi informasi baru (dugaan, belum diuji). Karena val hanya 20 gambar, selisih sekecil ini juga bisa terjadi secara kebetulan. Perubahan imgsz=640 tidak dipertahankan, dan E1_pretrained dipilih sebagai model akhir.
 
-**Kurva loss.**
-Pada results.png, loss train dan loss val [sama-sama turun / loss val mulai naik setelah epoch ke-..]. Ini menunjukkan model [belajar dengan sehat / mulai overfitting].
+**Kurva pelatihan.**
+Pada E1 maupun E3 ada ketidakstabilan di awal: val box_loss melonjak sekitar epoch 6-8 dan mAP di data val turun tajam di sekitar epoch 8-9 sebelum naik lagi. Dugaan penyebabnya adalah tahap awal pelatihan (warm-up) yang dipadukan dengan data yang sangat sedikit, sehingga evaluasi di 20 gambar val mudah naik-turun (dugaan, belum diuji). Setelah itu, pada E1 loss train dan val sama-sama turun, mAP50 naik ke sekitar 0.97, dan mAP50-95 naik sampai 0.725 serta masih cenderung naik di epoch terakhir. Ini menandakan E1 belum benar-benar konvergen, dan menambah epoch kemungkinan masih bisa memperbaikinya (dugaan). Pada E3, loss train terus turun, tetapi val box_loss naik tipis di beberapa epoch terakhir dan mAP50-95 turun dari sekitar 0.677 menjadi 0.655. Ini bisa jadi tanda awal overfitting, tetapi perubahannya kecil dan data val hanya 20 gambar, sehingga belum bisa disimpulkan dengan pasti.
 
-**Confusion matrix.**
-Kelas [..] lebih sering [terlewat / tertukar dengan kelas ..]. Dugaan penyebabnya: [misalnya sudut foto tertentu, benda terpotong di tepi foto]. (Tulis sebagai dugaan kalau belum diperiksa.)
+**Perbedaan antar kelas.**
+Kelas kamera lebih sulit daripada mouse. Di data val (E3), kamera mendapat recall 0.779 dan mAP50-95 0.567, sedangkan mouse recall 1.000 dan mAP50-95 0.784. Di data test (E1) polanya sama: kamera 0.688 dan mouse 0.934. Konsistennya pola ini menunjukkan bahwa kamera memang lebih sulit dideteksi dengan tepat. Dugaan penyebabnya: tampilan kamera lebih beragam antar sudut foto (depan, samping, atas, bawah), dan kotak label kamera lebih sulit dibuat pas.
+
+**Selisih mAP50 dan mAP50-95.**
+Nilai mAP50 sudah sangat tinggi (0.977 di val dan 0.995 di test), tetapi mAP50-95 lebih rendah (0.725 dan 0.811). Artinya model hampir selalu menemukan bendanya, tetapi posisi kotaknya belum selalu serapi label saat standar kecocokan dinaikkan. Salah satu faktor yang mungkin berpengaruh adalah label yang dibuat manual dengan ketelitian beberapa persen dari ukuran foto (dugaan, belum diuji).
 
 **Hasil di data test.**
-Model terpilih mendapat mAP50-95 [..] di data test, dibandingkan [..] di data val. [Selisihnya kecil / cukup besar] sehingga [model cukup stabil / perlu hati-hati karena data test hanya 10 gambar].
+Model terpilih (E1_pretrained) mendapat mAP50-95 sebesar 0.811 di data test, lebih tinggi dari 0.725 di data val. Selisih ini tidak boleh dibaca sebagai "model makin bagus di data baru". Data test hanya 10 gambar, sehingga satu gambar saja bisa menggeser angkanya cukup jauh. Yang bisa disimpulkan dengan aman adalah bahwa model tidak menurun di data yang belum pernah dilihat. Recall 1.000 berarti kesepuluh benda terdeteksi, dan precision 0.992 berarti hampir tidak ada deteksi yang salah.
+
+**Kecepatan.**
+Kolom ms/gambar di tabel 5.1 tidak stabil. E3 (gambar lebih besar) tampak lebih cepat (9.446 ms) daripada E1 (12.764 ms), padahal secara teori seharusnya sebaliknya, dan pada evaluasi test E1 hanya butuh 5.5 ms per gambar. Pengukuran dilakukan satu kali dan dipengaruhi kondisi GPU saat itu, sehingga kecepatan tidak dipakai sebagai dasar memilih model.
 
 ## 7. Keterbatasan
 - Dataset kecil (100 foto), sehingga hasil bisa berubah cukup besar antar eksperimen.
@@ -100,7 +99,7 @@ Model terpilih mendapat mAP50-95 [..] di data test, dibandingkan [..] di data va
 - Tiap eksperimen hanya dijalankan satu kali (seed 0), tanpa pengulangan.
 
 ## 8. Kesimpulan
-**[ISI 2-3 kalimat]** Contoh kerangka: Transfer learning dari COCO [membuktikan / tidak terlalu terlihat manfaatnya] pada dataset kecil ini, dengan E1 mengungguli E2 sebesar [..] mAP50-95. Tuning imgsz=640 [membantu / tidak membantu]. Model terpilih [..] mencapai mAP50-95 [..] di data test.
+Berdasarkan grafik hasil pelatihan model, E1_pretrained dan E3_tuning sama-sama menunjukkan konvergensi yang sangat baik dengan tren nilai loss (box, cls, dan l1 pada data train maupun val) yang menurun secara konsisten serta peningkatan metrik akurasi (precision, recall, dan mAP50) yang stabil mendekati angka 1.0. Namun, jika dibandingkan pada metrik ketat mAP50-95, model E1_pretrained menunjukkan hasil akhir yang sedikit lebih unggul dengan mencapai puncak sekitar 0.72, sedangkan E3_tuning berada di kisaran 0.68 hingga 0.70, yang mengindikasikan bahwa pendekatan pretrained memberikan performa generalisasi yang sedikit lebih optimal pada kasus ini.
 
 ## 9. Isi Repo
 ```
